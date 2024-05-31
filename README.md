@@ -4,8 +4,8 @@ This Node.js application extracts audio from a video file, transcribes the audio
 
 ## Configuration
 
-- `maxWordCount`: The maximum number of words per subtitle block.
-- `videoLocation`: The path to the video file you want to process.
+- `maxWordCount`: The maximum number of words per subtitle block. `main.js` Line 6.
+- `videoLocation`: The path to the video file you want to process. `main.js` Line 7.
 
 ## Dependencies
 
@@ -42,7 +42,7 @@ Ensure you have FFmpeg installed on your system to use `fluent-ffmpeg`.
 
 To process a video and generate an SRT file, run the script using:
 ```bash
-node index.js
+node main.js
 ```
 
 This will execute the `processVideo` function with the specified video location, extract the audio, transcribe it, and generate an SRT file in the same directory as the video.
