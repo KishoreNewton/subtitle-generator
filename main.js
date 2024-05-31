@@ -5,7 +5,7 @@ const ffmpeg = require('fluent-ffmpeg');
 
 // Global config
 const maxWordCount = 10;
-const videoLoaction = '/your-file-location/video.mp4';
+const videoLocation = '/your-file-location/video.mp4';
 
 async function extractAudio(videoPath) {
   return new Promise((resolve, reject) => {
@@ -108,5 +108,5 @@ async function processVideo(videoPath) {
   }
 }
 
-processVideo(videoLoaction);
+processVideo(videoLocation);
 
