@@ -5,7 +5,7 @@ const ffmpeg = require('fluent-ffmpeg');
 
 // Global config
 const maxWordCount = 10;
-const videoLocation = '/your-file-location/video.mp4';
+const videoLocation = '/home/your-path-to-video';
 
 async function extractAudio(videoPath) {
   return new Promise((resolve, reject) => {
@@ -26,16 +26,18 @@ async function transcribeAudio(audioPath) {
   formData.append('model', 'whisper-1');
   formData.append('response_format', 'verbose_json');
 
-  const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
-    headers: {
-      ...formData.getHeaders(),
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-    }
-  });
+  try {
+    const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
+      headers: {
+        ...formData.getHeaders(),
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      }
+    });
 
-  console.log(response.data);
-
-  return response.data;
+    return response.data;
+  } catch (error) {
+    console.log(error.request);
+  }
 }
 
 function generateSrtContent(words) {
@@ -82,27 +84,43 @@ function formatTime(seconds) {
   return `${hours}:${minutes}:${secondsInt},${milliseconds}`;
 }
 
-function generateSrtFile(transcriptionData, videoPath) {
-  if (!transcriptionData || !transcriptionData.words) {
-    console.error('Invalid transcription data received');
-    return;
-  }
-
-  const words = transcriptionData.words;
-  const srtContent = generateSrtContent(words);
-  const srtPath = videoPath.replace(/\.\w+$/, '.srt'); // Change file extension to .srt
-
-  fs.writeFileSync(srtPath, srtContent, 'utf8');
-  console.log(`SRT file has been created and saved to: ${srtPath}`);
+function convertToWebVTT(srtContent) {
+  const webVttContent = 'WEBVTT\n\n' + srtContent.replace(/,/g, '.');
+  return webVttContent;
 }
 
+function writeWebVTTFile(vttContent, vttPath) {
+  fs.writeFileSync(vttPath, vttContent, 'utf8');
+  console.log(`WebVTT file has been created and saved to: ${vttPath}`);
+}
+
+// function generateSrtFile(transcriptionData, videoPath) {
+//   if (!transcriptionData || !transcriptionData.words) {
+//     console.error('Invalid transcription data received');
+//     return;
+//   }
+// 
+//   const words = transcriptionData.words;
+//   const srtContent = generateSrtContent(words);
+//   const srtPath = videoPath.replace(/\.\w+$/, '.srt'); // Change file extension to .srt
+// 
+//   fs.writeFileSync(srtPath, srtContent, 'utf8');
+//   console.log(`SRT file has been created and saved to: ${srtPath}`);
+// }
 
 async function processVideo(videoPath) {
   try {
     const audioPath = await extractAudio(videoPath);
     const transcription = await transcribeAudio(audioPath);
-    generateSrtFile(transcription, videoPath);
-    console.log('SRT file has been created successfully.');
+    const srtContent = generateSrtContent(transcription.words);
+    const srtPath = videoPath.replace(/\.\w+$/, '.srt');
+    fs.writeFileSync(srtPath, srtContent, 'utf8');
+    console.log(`SRT file has been created and saved to: ${srtPath}`);
+
+    // Convert to WebVTT and save
+    const vttContent = convertToWebVTT(srtContent);
+    const vttPath = srtPath.replace(/\.srt$/, '.vtt');
+    writeWebVTTFile(vttContent, vttPath);
   } catch (error) {
     console.error('An error occurred:', error);
   }
